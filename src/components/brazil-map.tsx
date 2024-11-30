@@ -24,6 +24,11 @@ const BrazilMap: React.FC = () => {
     }
   }, [toggleSelectedState])
 
+  const getStateColor = (stateCode: string) => {
+    const colorIndex = selectedStates.indexOf(stateCode)
+    return colorIndex !== -1 ? colors[colorIndex % colors.length] : undefined
+  }
+
   const memoizedMap = useMemo(() => (
     <ComposableMap
       projection="geoMercator"
@@ -37,19 +42,18 @@ const BrazilMap: React.FC = () => {
           geographies.map((geo) => {
             const stateCode = geo.properties.SIGLA || geo.properties.sigla
             if (!stateCode) return null
-            const colorIndex = selectedStates.indexOf(stateCode)
-            const isSelected = colorIndex !== -1
+            const stateColor = getStateColor(stateCode)
 
             return (
               <Geography
                 key={geo.rsmKey}
                 geography={geo}
-                fill={isSelected ? colors[colorIndex % colors.length] : "#D6D6DA"}
+                fill={stateColor || "#D6D6DA"}
                 stroke="#FFF"
                 strokeWidth={0.5}
                 style={{
                   default: { outline: 'none' },
-                  hover: { outline: 'none', fill: '#F53' },
+                  hover: { outline: 'none', fill: stateColor || '#F53' },
                   pressed: { outline: 'none' },
                 }}
                 onClick={() => handleStateClick(stateCode)}
@@ -69,16 +73,24 @@ const BrazilMap: React.FC = () => {
         <div className="w-full md:w-1/3">
           <ScrollArea className="h-[500px] rounded-md border p-4">
             <div className="grid grid-cols-1 gap-2">
-              {Object.entries(climateData).map(([stateCode, { state }]) => (
-                <Button
-                  key={stateCode}
-                  onClick={() => handleStateClick(stateCode)}
-                  variant={selectedStates.includes(stateCode) ? "default" : "outline"}
-                  className="w-full justify-start"
-                >
-                  {state}
-                </Button>
-              ))}
+              {Object.entries(climateData).map(([stateCode, { state }]) => {
+                const stateColor = getStateColor(stateCode)
+                return (
+                  <Button
+                    key={stateCode}
+                    onClick={() => handleStateClick(stateCode)}
+                    variant="outline"
+                    className="w-full justify-start"
+                    style={{
+                      backgroundColor: stateColor,
+                      color: stateColor ? 'white' : undefined,
+                      borderColor: stateColor
+                    }}
+                  >
+                    {state}
+                  </Button>
+                )
+              })}
             </div>
           </ScrollArea>
         </div>
@@ -99,4 +111,3 @@ const BrazilMap: React.FC = () => {
 }
 
 export default React.memo(BrazilMap)
-
